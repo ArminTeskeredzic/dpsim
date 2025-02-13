@@ -482,6 +482,63 @@ struct ScenarioConfig {
 };
 } // namespace ThreeBus
 
+namespace generic_model_B_A {
+struct ScenarioConfig {
+
+  //-----------Network-----------//
+  Real Vnom = 220e3;
+  Real nomFreq = 50;
+  Real nomOmega = nomFreq * 2 * PI;
+
+  //-----------Generator 1 (bus1)-----------//
+  Real nomPower_G1 = 50e6;
+  Real nomPhPhVoltRMS_G1 = 10.5e3;
+  Real nomFreq_G1 = 50;
+  Real H_G1 = 5;
+  Real Xpd_G1 = 0.135;      //in p.u
+  Real Rs_G1 = 0.002; //in p.u
+  Real D_G1 = 1.5;        //in p.u
+  // Initialization parameters
+  Real initActivePower_G1 = 0e6;
+  Real setPointVoltage_G1 = nomPhPhVoltRMS_G1;
+  Real initMechPower_G1 = 0e6;
+
+
+  //-----------Transformers-----------//
+  Real t1_ratio = Vnom / nomPhPhVoltRMS_G1;
+
+  //-----------Load (bus psha)----------- only for power flow
+  Real activePower_L_bus_A = 0.1533e6;
+  Real reactivePower_L_bus_A = 15.3267e6;
+
+  Real activePower_L_bus_B = 0.1533e6;
+  Real reactivePower_L_bus_B = 15.3268e6;
+
+  //-----------Shunt (busB)-----------
+  Real shuntConduntanceB = 3.0989e-06;
+  Real shuntSusceptanceB = -3.0989e-04;
+
+  //-----------Shunt (busA)-----------
+  Real shuntConduntanceA = 3.0989e-06;
+  Real shuntSusceptanceA = -3.0989e-04;
+
+  // -----------Transmission Lines and Cables-----------//
+  // (230 kV)
+  //cable 1-2 (10.5km)
+  Real cableResistance = 0.032 * 10.5;                // R[ohm/km] * km
+  Real cableInductance = 0.101 / nomOmega * 10.5;     // Reactance[ohm/km]/(2*pi*f) * km
+  Real cableCapacitance = 0.21915e-6 * 10.5;          // C[F/km] * km
+  Real cableConductance = 0 * 10.5;
+  //line 3 (5km)
+  Real lineResistance3 = 0.0749 * 5;                  // R[ohm/km] * km == [ohm]
+  Real lineInductance3 = 0.3992 / nomOmega * 5;       // Reactance[ohm/km]/(2*pi*f) * km == [H]
+  Real lineCapacitance3 = 0.00466961e-6 * 5;          // C[F/km] * km
+  Real lineConductance3 = 0 * 5;
+  
+};
+} // namespace ThreeBus
+
+
 namespace SGIB {
 
 struct ScenarioConfig {
