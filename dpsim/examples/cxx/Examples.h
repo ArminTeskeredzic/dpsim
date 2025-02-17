@@ -495,13 +495,13 @@ struct ScenarioConfig {
   Real nomPhPhVoltRMS_G1 = 10.5e3;
   Real nomFreq_G1 = 50;
   Real H_G1 = 5;
-  Real Xpd_G1 = 0.135;      //in p.u
+  Real Xpd_G1 = 0.31;      //in p.u
   Real Rs_G1 = 0.002; //in p.u
   Real D_G1 = 1.5;        //in p.u
   // Initialization parameters
-  Real initActivePower_G1 = 0e6;
+  Real initActivePower_G1 = 45e6;
   Real setPointVoltage_G1 = nomPhPhVoltRMS_G1;
-  Real initMechPower_G1 = 0e6;
+  Real initMechPower_G1 = 45e6;
 
 
   //-----------Transformers-----------//
@@ -526,18 +526,60 @@ struct ScenarioConfig {
   // (230 kV)
   //cable 1-2 (10.5km)
   Real cableResistance = 0.032 * 10.5;                // R[ohm/km] * km
-  Real cableInductance = 0.101 / nomOmega * 10.5;     // Reactance[ohm/km]/(2*pi*f) * km
+  Real cableInductance = 0.321493e-3 * 10.5;     // L/km * km  
   Real cableCapacitance = 0.21915e-6 * 10.5;          // C[F/km] * km
-  Real cableConductance = 0 * 10.5;
+  Real cableConductance = 1e-15;
   //line 3 (5km)
   Real lineResistance3 = 0.0749 * 5;                  // R[ohm/km] * km == [ohm]
-  Real lineInductance3 = 0.3992 / nomOmega * 5;       // Reactance[ohm/km]/(2*pi*f) * km == [H]
+  Real lineInductance3 = 1.270693e-3 * 5;       // L/km * km
   Real lineCapacitance3 = 0.00466961e-6 * 5;          // C[F/km] * km
-  Real lineConductance3 = 0 * 5;
+  Real lineConductance3 = 1e-15;
   
 };
 } // namespace ThreeBus
 
+
+namespace generic_model_C_A {
+struct ScenarioConfig {
+
+  //-----------Network-----------//
+  Real Vnom = 220e3;
+  Real nomFreq = 50;
+  Real nomOmega = nomFreq * 2 * PI;
+
+  //-----------Generator 1 (bus1)-----------//
+  Real nomPower_G1 = 50e6;
+  Real nomPhPhVoltRMS_G1 = 10.5e3;
+  Real nomFreq_G1 = 50;
+  Real H_G1 = 5;
+  Real Xpd_G1 = 0.31;      //in p.u
+  Real Rs_G1 = 0.002; //in p.u
+  Real D_G1 = 1.5;        //in p.u
+  // Initialization parameters
+  Real initActivePower_G1 = 0e6;
+  Real setPointVoltage_G1 = nomPhPhVoltRMS_G1;
+  Real initMechPower_G1 = 0e6;
+
+
+  //-----------Transformers-----------//
+  Real t1_ratio = Vnom / nomPhPhVoltRMS_G1;
+
+  //-----------Load (bus psha)----------- only for power flow
+
+
+  //-----------Shunt (busB)-----------
+  //-----------Shunt (busB)-----------
+  Real shuntConduntanceB = 2.0659e-07;
+  Real shuntSusceptanceB = -2.0659e-05;
+  //2.0659e-07 - 2.0659e-05i  // when we not divide and not mult.
+  //3.0989e-06 - 3.0989e-04i   // when we divide by 15
+  //-----------Shunt (busA)-----------
+  Real shuntConduntanceA = 2.0659e-07;
+  Real shuntSusceptanceA = -2.0659e-05;
+
+  
+};
+}
 
 namespace SGIB {
 

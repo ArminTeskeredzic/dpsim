@@ -78,6 +78,7 @@ set(CIRCUIT_SOURCES
 	Circuits/EMT_ReducedOrderSG_VBR_Load_Fault.cpp
 	Circuits/EMT_SynGen4OrderIter_SMIB_Fault.cpp
 	Circuits/generic_restoration_model/scenario_B_step_A.cpp
+	Circuits/generic_restoration_model/scenario_C_step_A.cpp
 
 	# SMIB Reduced Order - Load step
 	Circuits/SP_SMIB_ReducedOrderSG_LoadStep.cpp
