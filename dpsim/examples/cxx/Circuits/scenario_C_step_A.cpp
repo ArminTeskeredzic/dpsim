@@ -125,19 +125,19 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
       syngenKundur.Tq0_t, syngenKundur.Td0_s, syngenKundur.Tq0_s,
       syngenKundur.H);
 */
-	// auto GEN_gas_EMT =
-    //   CPS::EMT::Ph3::SynchronGeneratorVBR::make("GEN_gas", Logger::Level::debug);
- 	// 	 GEN_gas_EMT->setBaseAndOperationalPerUnitParameters(
-    //   50e6/*nomPower*/, 10.5e3/*nomVoltage*/, 50/*nomFreq*/,
-    //   2/*poleNum*/, 1300/*nomFieldCurr*/, 0.002/*Rs*/,
-    //   2.4/*Ld*/, 1.33 /*Lq*/, 0.31/*Ld_t*/, 1.33/*Lq_t*/,
-    //   0.24/*Ld_s*/, 0.35/*Lq_s*/, 0.135/*Ll*/, 1.45/*Td0_t*/,
-    //   0.000001/*Tq0_t*/, 0.022/*Td0_s*/, 0.0095/*Tq0_s*/,
-    //   5/*H*/);
+	auto GEN_gas_EMT =
+      CPS::EMT::Ph3::SynchronGeneratorVBR::make("GEN_gas", Logger::Level::debug);
+ 		 GEN_gas_EMT->setBaseAndOperationalPerUnitParameters(
+      50e6/*nomPower*/, 10.5e3/*nomVoltage*/, 50/*nomFreq*/,
+      2/*poleNum*/, 1300/*nomFieldCurr*/, 0.002/*Rs*/,
+      2.4/*Ld*/, 1.33 /*Lq*/, 0.31/*Ld_t*/, 1.2/*Lq_t*/,
+      0.24/*Ld_s*/, 0.35/*Lq_s*/, 0.135/*Ll*/, 1.45/*Td0_t*/,
+      0.000001/*Tq0_t*/, 0.022/*Td0_s*/, 0.0095/*Tq0_s*/,
+      5/*H*/);
 
-	auto GEN_gas_EMT = EMT::Ph3::VoltageSource::make("GEN_gas", Logger::Level::debug);
-	GEN_gas_EMT->setParameters(CPS::Math::singlePhaseVariableToThreePhase(Complex(10.5e3, 0)),
-                    50);
+	// auto GEN_gas_EMT = EMT::Ph3::VoltageSource::make("GEN_gas", Logger::Level::debug);
+	// GEN_gas_EMT->setParameters(CPS::Math::singlePhaseVariableToThreePhase(Complex(10.5e3, 0)),
+    //                 50);
 
 	// Trafo
 	auto trafo = EMT::Ph3::Transformer::make("trafo_gas", "trafo_gas", Logger::Level::debug, true);
@@ -145,20 +145,6 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
                      (generic_model_C_A.nomPhPhVoltRMS_G1/generic_model_C_A.Vnom)*(1 + (2.5/100)*0), 5.0*30*0, Math::singlePhaseParameterToThreePhase(3.64157728),
                      Math::singlePhaseParameterToThreePhase(0.15518646*2));
 	
-	//auto trafo_2 = EMT::Ph3::Transformer::make("trafo_load", "trafo_load", Logger::Level::debug, true);
-	//trafo_2->setParameters(220e3 /*high voltage side*/, 10e3 /*low voltage side*/, 50e6,
-    //                 (220e3/10e3), 5.0*30*0, Math::singlePhaseParameterToThreePhase(3.64157728),
-    //                 Math::singlePhaseParameterToThreePhase(0.15518646*2));
-
-	//transformer->setParameters(generic_model_C_A.nomPhPhVoltRMS_G1 /*nomVoltageEnd1*/, generic_model_C_A.Vnom /*nomVoltageEnd2*/, generic_model_C_A.nomPower_G1 /*ratedPower*/, (generic_model_C_A.nomPhPhVoltRMS_G1/generic_model_C_A.Vnom)*(1 + (2.5/100)*0)/*ratioAbs*/, 5.0*30*0 /*ratioPhase*/, /*2*1.9129660649*/ 1.82078864*2 /*resistance*/, /*2*0.163042774914*/ 0.15518646*2 /*inductance*/);
-    //Real baseVolt = voltageNode1 >= voltageNode2 ? voltageNode1 : voltageNode2;
-    //transformer->setBaseVoltage(generic_model_C_A.Vnom);
-/*
-	auto breaker_b_EMT = CPS::EMT::Ph3::Switch::make("breaker_b_EMT", Logger::Level::debug);
-	breaker_b_EMT->setParameters(Math::singlePhaseParameterToThreePhase(SwitchOpen), 
-							Math::singlePhaseParameterToThreePhase(SwitchClosed));
-	breaker_b_EMT->openSwitch();
-*/
 
 	auto dummy_load_bus_b_EMT = EMT::Ph3::RXLoad::make("dummy_load_bus_b", Logger::Level::debug);
 	dummy_load_bus_b_EMT->setParameters(CPS::Math::singlePhasePowerToThreePhase(15e6), 
@@ -170,7 +156,7 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	
 
 	// Topology
-	GEN_gas_EMT->connect({ BUS_gas_EMT,  EMT::SimNode::GND});
+	GEN_gas_EMT->connect({ BUS_gas_EMT});
 	trafo->connect({BUS_gas_EMT, BUS_b_EMT});
 	dummy_load_bus_b_EMT->connect({ BUS_b_EMT });
 	//breaker_b_EMT->connect({BUS_b_EMT, BUS_dummy_EMT});
@@ -198,18 +184,6 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	// loggerEMT->logAttribute("P_elec1", GEN_gas_EMT->attribute("P_elec"));
 	
 
-	/*  staro
-	Simulation simEMT(simNameEMT, Logger::Level::debug);
-	simEMT.setSystem(systemEMT);
-	simEMT.setTimeStep(timeStep);
-	simEMT.setFinalTime(finalTime);
-	simEMT.setDomain(Domain::EMT);
-	simEMT.addLogger(loggerEMT);
-	simEMT.setSolverType(Solver::Type::MNA);
-	simEMT.doInitFromNodesAndTerminals(true);
-	//simEMT.setDirectLinearSolverImplementation(DPsim::DirectLinearSolverImpl::SparseLU);
-	*/
-
 	Simulation simEMT(simNameEMT, Logger::Level::debug);
   	simEMT.doInitFromNodesAndTerminals(true);
   	simEMT.setSystem(systemEMT);
@@ -217,6 +191,7 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
   	simEMT.setFinalTime(finalTime);
   	simEMT.setDomain(Domain::EMT);
   	simEMT.addLogger(loggerEMT);
+	simEMT.doSystemMatrixRecomputation(true);
 
 	if (useVarResSwitch == true) {
 		simEMT.doSystemMatrixRecomputation(true);
