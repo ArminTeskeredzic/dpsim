@@ -53,7 +53,46 @@ struct MachineParameters {
   Real Tq0_s = 0.0700;
   Real Lq_t = 0.6500;
   Real Lq_s = 0.2500;
-  Real Ld = 1.8099;
+  Real Ld = 1.8099;  
+  Real Lq = 1.7600;
+};
+
+struct myMachineParameters {
+  // Thermal generating unit, 3600r/min, 2-pole
+  Real nomPower = 555e6;
+  Real nomVoltage = 24e3; // Phase-to-Phase RMS
+  Real nomFreq = 60;
+  Real nomFieldCurr = 1300;
+  Int poleNum = 2;
+  Real H = 3.7;
+
+  // Define machine parameters in per unit
+  // Fundamental parameters
+  Real Rs = 0.003;
+  Real Ll = 0.15;
+  Real Lmd = 1.6599;
+  Real Lmq = 1.61;
+  Real Rfd = 0.0006;
+  Real Llfd = 0.1648;
+  Real Rkd = 0.0284;
+  Real Llkd = 0.1713;
+  Real Rkq1 = 0.0062;
+  Real Llkq1 = 0.7252;
+  Real Rkq2 = 0.0237;
+  Real Llkq2 = 0.125;
+
+  // Operational parameters
+  Real Td0_t = 8.0669;
+  Real Td0_s = 0.0300;
+  Real Td_t = 1.3368;
+  Real Td_s = 0.0230;
+  Real Ld_t = 0.2999;
+  Real Ld_s = 0.2299;
+  Real Tq0_t = 0.9991;
+  Real Tq0_s = 0.0700;
+  Real Lq_t = 0.6500;
+  Real Lq_s = 0.2500;
+  Real Ld = 1.8099;  
   Real Lq = 1.7600;
 };
 } // namespace SynchronousGeneratorKundur
@@ -554,28 +593,28 @@ struct ScenarioConfig {
   Real H_G1 = 5;
   Real Xpd_G1 = 0.31;      //in p.u
   Real Rs_G1 = 0.002; //in p.u
-  Real D_G1 = 1.5;        //in p.u
+  Real D_G1 = 0;        //in p.u
   // Initialization parameters
-  Real initActivePower_G1 = 0e6;
+  Real initActivePower_G1 = 15.1192613e6;
   Real setPointVoltage_G1 = nomPhPhVoltRMS_G1;
-  Real initMechPower_G1 = 0e6;
+  Real initMechPower_G1 = 15.1192613e6;
 
 
   //-----------Transformers-----------//
-  Real t1_ratio = Vnom / nomPhPhVoltRMS_G1;
+  Real t1_ratio = Vnom/nomPhPhVoltRMS_G1;
 
   //-----------Load (bus psha)----------- only for power flow
 
 
   //-----------Shunt (busB)-----------
   //-----------Shunt (busB)-----------
-  Real shuntConduntanceB = 2.0659e-07;
-  Real shuntSusceptanceB = -2.0659e-05;
+  Real shuntConduntanceB = 3.0989e-06;
+  Real shuntSusceptanceB = -3.0989e-04;
   //2.0659e-07 - 2.0659e-05i  // when we not divide and not mult.
   //3.0989e-06 - 3.0989e-04i   // when we divide by 15
   //-----------Shunt (busA)-----------
-  Real shuntConduntanceA = 2.0659e-07;
-  Real shuntSusceptanceA = -2.0659e-05;
+  Real shuntConduntanceA = 3.0989e-06;
+  Real shuntSusceptanceA = -3.0989e-04;
 
   
 };

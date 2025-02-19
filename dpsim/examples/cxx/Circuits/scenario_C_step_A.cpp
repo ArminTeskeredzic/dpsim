@@ -6,14 +6,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *********************************************************************************/
 #include <DPsim.h>
-#include "../../Examples.h"
+#include "../Examples.h"
 
 using namespace DPsim;
 using namespace CPS;
 using namespace CIM::Examples::Grids::generic_model_C_A;
+//using namespace CPS::CIM;
 
 ScenarioConfig generic_model_C_A;
-
+//Examples::Components::SynchronousGeneratorKundur::myMachineParameters
+ //syngenKundur;
 //Switch to trigger fault at generator terminal
 Real SwitchOpen = 1e12;
 Real SwitchClosed = 1e-12;
@@ -35,6 +37,7 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	// setPointVoltage is defined as the voltage at the transfomer primary side and should be transformed to network side
 	GEN_gas_PF->setParameters(generic_model_C_A.nomPower_G1, generic_model_C_A.nomPhPhVoltRMS_G1, generic_model_C_A.initActivePower_G1, 10.5e3, PowerflowBusType::VD);
 	GEN_gas_PF->setBaseVoltage(10.5e3);
+	
 
 	auto extnetPF = SP::Ph1::NetworkInjection::make("Slack", Logger::Level::debug);
 	extnetPF->setParameters(generic_model_C_A.nomPhPhVoltRMS_G1/*scenario.systemNominalVoltage*/);
@@ -42,7 +45,7 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	extnetPF->modifyPowerFlowBusType(PowerflowBusType::VD);
 
 	auto transformer = std::make_shared<SP::Ph1::Transformer>("trafo_gas", Logger::Level::debug);
-    transformer->setParameters(generic_model_C_A.nomPhPhVoltRMS_G1  /*nomVoltageEnd1*/, generic_model_C_A.Vnom /*nomVoltageEnd2*/, generic_model_C_A.nomPower_G1 /*ratedPower*/, 
+    transformer->setParameters(generic_model_C_A.nomPhPhVoltRMS_G1/*nomVoltageEnd1*/,  generic_model_C_A.Vnom/*nomVoltageEnd2*/, generic_model_C_A.nomPower_G1 /*ratedPower*/, 
 				(generic_model_C_A.nomPhPhVoltRMS_G1/generic_model_C_A.Vnom)/*ratioAbs*/, 5.0*30*0 /*ratioPhase*/, /*2*1.9129660649*/ /*3.64157728*/1.82078864*2 /*resistance*/, 
 	/*2*0.163042774914*/ 0.310372659/*0.15518646*2*/ /*inductance*/);
     //Real baseVolt = voltageNode1 >= voltageNode2 ? voltageNode1 : voltageNode2;
@@ -50,7 +53,7 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	
 
 	auto dummy_load_bus_b = SP::Ph1::Load::make("dummy_load_bus_b", Logger::Level::debug);
-	dummy_load_bus_b->setParameters(15e6, 5e6, 220e3);
+	dummy_load_bus_b->setParameters(0.0099591e6, 0.99591e6, 220e3);
 
 	// shunt
 	auto shunt_SR_bcb_PF = SP::Ph1::Shunt::make("shunt_SR_acb", Logger::Level::debug);
@@ -63,12 +66,12 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	//extnetPF->connect({ BUS_gas_PF });
 	transformer->connect({ BUS_gas_PF, BUS_b_PF});
 	//dummy_load_bus_b->connect({ BUS_b_PF });
-	dummy_load_bus_b->connect({ BUS_b_PF });
+	shunt_SR_bcb_PF->connect({ BUS_b_PF });
 
 
 	auto systemPF = SystemTopology(50, // das ist freq??
 			SystemNodeList{BUS_gas_PF, BUS_b_PF},
-			SystemComponentList{GEN_gas_PF, transformer, dummy_load_bus_b});
+			SystemComponentList{GEN_gas_PF, transformer, shunt_SR_bcb_PF});
 
 	// Logging
 	auto loggerPF = DataLogger::make(simNamePF);
@@ -101,20 +104,47 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	// Components
 
 	//Synchronous generator 1
-	auto GEN_gas_EMT = EMT::Ph3::SynchronGeneratorTrStab::make("GEN_gas", Logger::Level::debug);
+	// simple generator model
+	//auto GEN_gas_EMT = EMT::Ph3::SynchronGeneratorTrStab::make("GEN_gas", Logger::Level::debug);
 	// Xpd is given in p.u of generator base at transfomer primary side and should be transformed to network side
-	GEN_gas_EMT->setStandardParametersPU(generic_model_C_A.nomPower_G1, generic_model_C_A.nomPhPhVoltRMS_G1, generic_model_C_A.nomFreq_G1, 
-				 generic_model_C_A.Xpd_G1*std::pow(generic_model_C_A.t1_ratio,2), cmdInertia_G1*generic_model_C_A.H_G1, generic_model_C_A.Rs_G1, cmdDamping_G1*generic_model_C_A.D_G1);
+	//GEN_gas_EMT->setStandardParametersPU(generic_model_C_A.nomPower_G1, generic_model_C_A.nomPhPhVoltRMS_G1, generic_model_C_A.nomFreq_G1, 
+	//			 generic_model_C_A.Xpd_G1*std::pow(generic_model_C_A.t1_ratio,2), cmdInertia_G1*generic_model_C_A.H_G1, generic_model_C_A.Rs_G1, cmdDamping_G1*generic_model_C_A.D_G1);
 	// Get actual active and reactive power of generator's Terminal from Powerflow solution
-	Complex initApparentPower_G1= GEN_gas_PF->getApparentPower();
-	GEN_gas_EMT->setInitialValues(initApparentPower_G1, generic_model_C_A.initMechPower_G1);
+	//Complex initApparentPower_G1= GEN_gas_PF->getApparentPower();
+	
+	//GEN_gas_EMT->setInitialValues(initApparentPower_G1, generic_model_C_A.initMechPower_G1);
+	
+	/*
+	auto GEN_gas_EMT =
+      CPS::EMT::Ph3::SynchronGeneratorVBR::make("GEN_gas", Logger::Level::debug);
+  GEN_gas_EMT->setBaseAndOperationalPerUnitParameters(
+      syngenKundur.nomPower, syngenKundur.nomVoltage, syngenKundur.nomFreq,
+      syngenKundur.poleNum, syngenKundur.nomFieldCurr, syngenKundur.Rs,
+      syngenKundur.Ld, syngenKundur.Lq, syngenKundur.Ld_t, syngenKundur.Lq_t,
+      syngenKundur.Ld_s, syngenKundur.Lq_s, syngenKundur.Ll, syngenKundur.Td0_t,
+      syngenKundur.Tq0_t, syngenKundur.Td0_s, syngenKundur.Tq0_s,
+      syngenKundur.H);
+*/
+	// auto GEN_gas_EMT =
+    //   CPS::EMT::Ph3::SynchronGeneratorVBR::make("GEN_gas", Logger::Level::debug);
+ 	// 	 GEN_gas_EMT->setBaseAndOperationalPerUnitParameters(
+    //   50e6/*nomPower*/, 10.5e3/*nomVoltage*/, 50/*nomFreq*/,
+    //   2/*poleNum*/, 1300/*nomFieldCurr*/, 0.002/*Rs*/,
+    //   2.4/*Ld*/, 1.33 /*Lq*/, 0.31/*Ld_t*/, 1.33/*Lq_t*/,
+    //   0.24/*Ld_s*/, 0.35/*Lq_s*/, 0.135/*Ll*/, 1.45/*Td0_t*/,
+    //   0.000001/*Tq0_t*/, 0.022/*Td0_s*/, 0.0095/*Tq0_s*/,
+    //   5/*H*/);
+
+	auto GEN_gas_EMT = EMT::Ph3::VoltageSource::make("GEN_gas", Logger::Level::debug);
+	GEN_gas_EMT->setParameters(CPS::Math::singlePhaseVariableToThreePhase(Complex(10.5e3, 0)),
+                    50);
 
 	// Trafo
 	auto trafo = EMT::Ph3::Transformer::make("trafo_gas", "trafo_gas", Logger::Level::debug, true);
-	trafo->setParameters( generic_model_C_A.nomPhPhVoltRMS_G1, generic_model_C_A.Vnom, generic_model_C_A.nomPower_G1,
+	trafo->setParameters(generic_model_C_A.nomPhPhVoltRMS_G1, generic_model_C_A.Vnom, generic_model_C_A.nomPower_G1,
                      (generic_model_C_A.nomPhPhVoltRMS_G1/generic_model_C_A.Vnom)*(1 + (2.5/100)*0), 5.0*30*0, Math::singlePhaseParameterToThreePhase(3.64157728),
                      Math::singlePhaseParameterToThreePhase(0.15518646*2));
-
+	
 	//auto trafo_2 = EMT::Ph3::Transformer::make("trafo_load", "trafo_load", Logger::Level::debug, true);
 	//trafo_2->setParameters(220e3 /*high voltage side*/, 10e3 /*low voltage side*/, 50e6,
     //                 (220e3/10e3), 5.0*30*0, Math::singlePhaseParameterToThreePhase(3.64157728),
@@ -140,7 +170,7 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	
 
 	// Topology
-	GEN_gas_EMT->connect({ BUS_gas_EMT });
+	GEN_gas_EMT->connect({ BUS_gas_EMT,  EMT::SimNode::GND});
 	trafo->connect({BUS_gas_EMT, BUS_b_EMT});
 	dummy_load_bus_b_EMT->connect({ BUS_b_EMT });
 	//breaker_b_EMT->connect({BUS_b_EMT, BUS_dummy_EMT});
@@ -159,13 +189,13 @@ void scenario_C_step_A(String simName, Real timeStep, Real finalTime, Bool start
 	auto loggerEMT = DataLogger::make(simNameEMT);
 	loggerEMT->logAttribute("BUS_gas_EMT_v", BUS_gas_EMT->attribute("v"));
 	loggerEMT->logAttribute("BUS_b_EMT_v", BUS_b_EMT->attribute("v"));
-	loggerEMT->logAttribute("GEN_gas_EMT_ep_mag", GEN_gas_EMT->attribute("Ep_mag"));
-	loggerEMT->logAttribute("GEN_gas_EMT_v", GEN_gas_EMT->attribute("v_intf"));
-	loggerEMT->logAttribute("GEN_gas_EMT_i", GEN_gas_EMT->attribute("i_intf"));
-	loggerEMT->logAttribute("GEN_gas_EMT_wr", GEN_gas_EMT->attribute("w_r"));
-	loggerEMT->logAttribute("GEN_gas_EMT_delta", GEN_gas_EMT->attribute("delta_r"));	
-	loggerEMT->logAttribute("P_mech1", GEN_gas_EMT->attribute("P_mech"));
-	loggerEMT->logAttribute("P_elec1", GEN_gas_EMT->attribute("P_elec"));
+	//loggerEMT->logAttribute("GEN_gas_EMT_ep_mag", GEN_gas_EMT->attribute("Ep_mag"));
+	// loggerEMT->logAttribute("GEN_gas_EMT_v", GEN_gas_EMT->attribute("v_intf"));
+	// loggerEMT->logAttribute("GEN_gas_EMT_i", GEN_gas_EMT->attribute("i_intf"));
+	// loggerEMT->logAttribute("GEN_gas_EMT_wr", GEN_gas_EMT->attribute("w_r"));
+	// loggerEMT->logAttribute("GEN_gas_EMT_delta", GEN_gas_EMT->attribute("delta_r"));	
+	// loggerEMT->logAttribute("P_mech1", GEN_gas_EMT->attribute("P_mech"));
+	// loggerEMT->logAttribute("P_elec1", GEN_gas_EMT->attribute("P_elec"));
 	
 
 	/*  staro
@@ -220,7 +250,7 @@ int main(int argc, char* argv[]) {
 	Bool startFaultEvent=true;
 	Bool endFaultEvent=true;
 	Bool useVarResSwitch=false;
-	Real startTimeFault=5.5;
+	Real startTimeFault=15.5;
 	Real endTimeFault=100;
 	Real cmdInertia_G1= 1.0;
 	Real cmdDamping_G1= 1.0;

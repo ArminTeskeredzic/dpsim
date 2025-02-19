@@ -59,7 +59,6 @@ void SP::Ph1::Transformer::setParameters(Real nomVoltageEnd1,
 
   mRatioAbs = std::abs(**mRatio);
   mRatioPhase = std::arg(**mRatio);
-
   mParametersSet = true;
 }
 
@@ -145,8 +144,8 @@ void SP::Ph1::Transformer::initializeFromNodesAndTerminals(Real frequency) {
   if (mBehaviour == TopologicalPowerComp::Behaviour::Initialization ||
       mBehaviour == TopologicalPowerComp::Behaviour::MNASimulation) {
 
-    Real pSnub = P_SNUB_TRANSFORMER * **mRatedPower;
-    Real qSnub = Q_SNUB_TRANSFORMER * **mRatedPower;
+    Real pSnub = P_SNUB_TRANSFORMER * **mRatedPower * 1e-6;
+    Real qSnub = Q_SNUB_TRANSFORMER * **mRatedPower * 1e-6;
 
     // A snubber conductance is added on the higher voltage side
     mSnubberResistance1 = std::pow(std::abs(**mNominalVoltageEnd1), 2) / pSnub;
